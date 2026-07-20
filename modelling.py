@@ -7,10 +7,10 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 
 def train_model():
-    # 1. Konfigurasi MLflow Tracking (Gunakan mode lokal bawaan jika di GitHub)
+    # 1. Konfigurasi MLflow Tracking (Gunakan folder /tmp jika di GitHub agar bebas Permission Error)
     if os.environ.get('GITHUB_ACTIONS'):
-        print("=== Berjalan di GitHub Actions: Menyimpan run secara lokal ===")
-        mlflow.set_tracking_uri("file:///./mlruns")
+        print("=== Berjalan di GitHub Actions: Menyimpan run ke folder /tmp ===")
+        mlflow.set_tracking_uri("file:///tmp/mlruns")
     else:
         print("=== Berjalan di Komputer Lokal ===")
         mlflow.set_tracking_uri("http://127.0.0.1:5000/")
@@ -22,10 +22,9 @@ def train_model():
     train_path = os.path.join('namadataset_preprocessing', 'train_clean.csv')
     test_path = os.path.join('namadataset_preprocessing', 'test_clean.csv')
     
-    # AKALAN AGAR DI GITHUB TIDAK ERROR: Buat data tiruan jika file aslinya tidak ada
+    # Buat data tiruan jika file aslinya tidak ada di GitHub
     if not os.path.exists(train_path) or not os.path.exists(test_path):
         print("File asli tidak ditemukan di GitHub. Membuat data tiruan untuk bypass CI...")
-        # Membuat 100 baris data acak dengan 5 fitur + 1 target (player_rating)
         dummy_train = pd.DataFrame(np.random.rand(100, 5), columns=[f'feature_{i}' for i in range(5)])
         dummy_train['player_rating'] = np.random.randint(50, 95, size=100)
         
@@ -37,7 +36,6 @@ def train_model():
         X_test = dummy_test.drop(columns=['player_rating'])
         y_test = dummy_test['player_rating']
     else:
-        # Jika dijalankan di laptop Anda (file aslinya ada)
         print("Membaca data asli...")
         train_data = pd.read_csv(train_path)
         test_data = pd.read_csv(test_path)
